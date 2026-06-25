@@ -1,0 +1,5 @@
+Always use Next.js 15+ App Router best practices.
+Prefer server components unless client components are needed.
+Use TypeScript.
+Follow official Next.js docs patterns.
+Use Tailwind CSS.

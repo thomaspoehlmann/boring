@@ -1,0 +1,33 @@
+---
+description: When designing a frontend or frontend components.
+globs: 
+alwaysApply: false
+---
+### Rules for Frontend
+
+- You must pay attention to visual clarity and contrast. Do not place white text on a white background.
+- You must ensure the UX is pleasant. Boxes should grow to fit their contents, etc. 
+- When asking the user for sensitive information - you must use password style text-entry boxes in the UI.
+- You should use Next.js as it works best with Vercel.
+- Follow official Next.js guidance: https://nextjs.org/docs
+- This frontend will ultimately be deployed on Vercel, but it should be possible to test locally. 
+- Always provide users with a way to run the created UI once you have created it.
+
+
+## Color Palette
+- Primary: Use a deep slate blue (#1E293B) for primary actions.
+- Accent: Use a vibrant emerald green (#10B981) for success states and buttons.
+- Background: Use a neutral off-white (#F8FAFC) for backgrounds to reduce eye strain.
+- Text: Use dark charcoal (#334155) for main headings and soft grey (#64748B) for secondary text.
+
+## Styling Philosophy
+- Use Tailwind CSS for all styling.
+- Components should have rounded corners (use `rounded-xl` for cards, `rounded-lg` for buttons).
+- All buttons should have a subtle hover transition (`transition-all duration-200 hover:scale-105`).
+- Use "Glassmorphism" for cards: `bg-white/80 backdrop-blur-md border border-white/20`.
+
+## Best Practices
+- Always ensure mobile responsiveness first (mobile-first approach).
+- Use Lucide-react for all iconography.
+- Maintain consistent padding: use `p-4` for small containers and `p-8` for main sections.
+- When in doubt, favor whitespace over clutter.
