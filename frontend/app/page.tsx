@@ -505,8 +505,8 @@ export default function ChatPage() {
                       {showActions && m.status !== "streaming" && (
                         <div
                           className={cn(
-                            "message-actions absolute -top-2 z-20 flex gap-1 rounded-lg p-0.5",
-                            m.role === "user" ? "left-2" : "right-2",
+                            "message-actions absolute -top-9 z-20 flex gap-1 rounded-lg p-0.5",
+                            m.role === "user" ? "right-0" : "left-0",
                           )}
                           style={{
                             background: "rgba(10,10,20,0.85)",
