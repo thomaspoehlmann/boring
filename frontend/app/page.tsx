@@ -359,7 +359,7 @@ export default function ChatPage() {
 
   return (
     <div
-      className="relative flex min-h-screen items-center justify-center p-4"
+      className="relative flex h-screen items-center justify-center overflow-hidden p-4"
       style={{ background: "var(--background)" }}
     >
       {/* Nebula background blobs */}
