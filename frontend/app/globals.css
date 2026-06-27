@@ -87,18 +87,27 @@ body {
 }
 
 /* ── Streaming & thinking UX ── */
-@keyframes thinking-float {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50%       { transform: translateY(-4px); opacity: 1; }
+@keyframes thinking-glow {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+    box-shadow: 0 0 4px var(--accent-glow);
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+    box-shadow: 0 0 12px var(--accent-glow), 0 0 20px rgba(167, 139, 250, 0.2);
+  }
 }
 
 .thinking-dot {
   display: inline-block;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   background: var(--accent);
   border-radius: 9999px;
-  animation: thinking-float 1.4s ease-in-out infinite;
+  animation: thinking-glow 1.4s ease-in-out infinite;
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
 .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
