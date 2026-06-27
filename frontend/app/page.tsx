@@ -658,6 +658,15 @@ export default function ChatPage() {
               </div>
             )}
 
+            {/* Input separator */}
+            <div
+              className="h-px w-full"
+              style={{
+                background: "linear-gradient(to right, transparent, rgba(167,139,250,0.15) 50%, transparent)",
+              }}
+              aria-hidden
+            />
+
             {/* Input area */}
             <form
               className="flex items-end gap-2"
@@ -718,6 +727,10 @@ export default function ChatPage() {
                   disabled={!canSend}
                   className="h-11 px-4"
                   aria-label="Send message"
+                  style={!canSend ? {
+                    background: "rgba(255,255,255,0.06)",
+                    boxShadow: "none",
+                  } : undefined}
                   onMouseEnter={(e) => {
                     if (!e.currentTarget.disabled)
                       e.currentTarget.style.boxShadow =
