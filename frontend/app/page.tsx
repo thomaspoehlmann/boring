@@ -399,10 +399,10 @@ export default function ChatPage() {
     } finally {
       setIsSending(false);
       abortRef.current = null;
-      queueMicrotask(() => {
+      setTimeout(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
         textareaRef.current?.focus();
-      });
+      }, 0);
     }
   }
 
