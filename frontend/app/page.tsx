@@ -466,7 +466,7 @@ export default function ChatPage() {
             {/* Message list */}
             <div
               ref={listRef}
-              className="max-h-[60vh] space-y-3 overflow-y-auto overflow-x-clip rounded-xl p-3 pt-10 sm:p-4 sm:pt-10"
+              className="max-h-[60vh] space-y-8 overflow-y-auto overflow-x-clip rounded-xl p-3 pt-10 sm:p-4 sm:pt-10"
               aria-label="Messages"
               style={{
                 scrollbarWidth: "thin",
