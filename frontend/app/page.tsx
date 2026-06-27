@@ -26,8 +26,6 @@ function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-const STORAGE_KEY = "the-void-messages";
-
 const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
@@ -35,15 +33,7 @@ const WELCOME_MESSAGE: Message = {
 };
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return [WELCOME_MESSAGE];
-  });
+  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,12 +66,6 @@ export default function ChatPage() {
   }, [showActionsId]);
 
   const canSend = input.trim().length > 0 && !isSending;
-
-  const persist = (next: Message[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {}
-  };
 
   function getHistoryForRequest(): ChatMessage[] {
     return messages
@@ -161,7 +145,6 @@ export default function ChatPage() {
       } else {
         next.splice(idx, 1);
       }
-      persist(next);
       return next;
     });
   }
@@ -173,7 +156,6 @@ export default function ChatPage() {
     const idx = messages.findIndex((m) => m.id === id);
     const base = messages.slice(0, idx);
     setMessages(base);
-    persist(base);
     setInput(msg.content);
     requestAnimationFrame(() => {
       const el = textareaRef.current;
@@ -191,13 +173,11 @@ export default function ChatPage() {
     const userMsg = messages[realIdx];
     const base = messages.slice(0, realIdx + 1);
     setMessages(base);
-    persist(base);
     void sendMessage(userMsg.content, true);
   }
 
   function clearConversation() {
     setMessages([WELCOME_MESSAGE]);
-    persist([WELCOME_MESSAGE]);
     setError(null);
   }
 
@@ -246,17 +226,9 @@ export default function ChatPage() {
     };
 
     if (!isRegenerate) {
-      setMessages((prev) => {
-        const next = [...prev, userMessage, pendingAssistant];
-        persist(next);
-        return next;
-      });
+      setMessages((prev) => [...prev, userMessage, pendingAssistant]);
     } else {
-      setMessages((prev) => {
-        const next = [...prev, pendingAssistant];
-        persist(next);
-        return next;
-      });
+      setMessages((prev) => [...prev, pendingAssistant]);
     }
 
     queueMicrotask(() => {
@@ -302,15 +274,11 @@ export default function ChatPage() {
             const trimmed = line.trim();
             if (!trimmed) continue;
             if (trimmed === "data: [DONE]") {
-              setMessages((prev) => {
-                const next = prev.map((m) =>
-                  m.id === pendingAssistant.id
-                    ? { ...m, status: "done" as const }
-                    : m,
-                );
-                persist(next);
-                return next;
-              });
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === pendingAssistant.id ? { ...m, status: "done" as const } : m,
+                ),
+              );
               return;
             }
             if (trimmed.startsWith("data: ")) {
@@ -338,15 +306,11 @@ export default function ChatPage() {
           }
         }
 
-        setMessages((prev) => {
-          const next = prev.map((m) =>
-            m.id === pendingAssistant.id
-              ? { ...m, status: "done" as const }
-              : m,
-          );
-          persist(next);
-          return next;
-        });
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === pendingAssistant.id ? { ...m, status: "done" as const } : m,
+          ),
+        );
         return;
       }
 
@@ -366,15 +330,13 @@ export default function ChatPage() {
         throw new Error("Malformed API response");
       }
 
-      setMessages((prev) => {
-        const next = prev.map((m) =>
+      setMessages((prev) =>
+        prev.map((m) =>
           m.id === pendingAssistant.id
             ? { ...m, content: reply, status: "done" as const }
             : m,
-        );
-        persist(next);
-        return next;
-      });
+        ),
+      );
     } catch (err: unknown) {
       if (
         err &&
@@ -382,20 +344,12 @@ export default function ChatPage() {
         "name" in err &&
         (err as { name?: string }).name === "AbortError"
       ) {
-        setMessages((prev) => {
-          const next = prev.filter((m) => m.id !== pendingAssistant.id);
-          persist(next);
-          return next;
-        });
+        setMessages((prev) => prev.filter((m) => m.id !== pendingAssistant.id));
         return;
       }
       const msg = err instanceof Error ? err.message : "Failed to send message";
       setError(msg);
-      setMessages((prev) => {
-        const next = prev.filter((m) => m.id !== pendingAssistant.id);
-        persist(next);
-        return next;
-      });
+      setMessages((prev) => prev.filter((m) => m.id !== pendingAssistant.id));
     } finally {
       setIsSending(false);
       abortRef.current = null;
