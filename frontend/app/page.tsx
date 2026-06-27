@@ -367,8 +367,8 @@ export default function ChatPage() {
       <div className="nebula-blob nebula-blob-2" aria-hidden />
       <div className="nebula-blob nebula-blob-3" aria-hidden />
 
-      <div className="relative z-10 w-full max-w-[680px]">
-        <Card className="p-4 sm:p-6">
+      <div className="relative z-10 w-full max-w-[680px] max-h-[calc(100vh-2rem)] flex flex-col">
+        <Card className="p-4 sm:p-6 flex flex-col h-full">
           {/* Header */}
           <CardHeader className="flex-row items-center justify-between pb-4">
             <div className="flex items-center gap-3">
@@ -425,7 +425,7 @@ export default function ChatPage() {
             aria-hidden
           />
 
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 flex flex-col flex-1 min-h-0 overflow-hidden">
             {error ? (
               <div
                 className="flex items-start gap-2 rounded-xl p-3 text-sm"
@@ -466,7 +466,7 @@ export default function ChatPage() {
             {/* Message list */}
             <div
               ref={listRef}
-              className="max-h-[60vh] space-y-8 overflow-y-auto overflow-x-clip rounded-xl p-3 pt-10 sm:p-4 sm:pt-10"
+              className="flex-1 min-h-0 space-y-8 overflow-y-auto overflow-x-clip rounded-xl p-3 pt-10 sm:p-4 sm:pt-10"
               aria-label="Messages"
               style={{
                 scrollbarWidth: "thin",
