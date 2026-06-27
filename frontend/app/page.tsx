@@ -648,7 +648,7 @@ export default function ChatPage() {
 
                         {/* Timestamp */}
                         {m.id !== "welcome" && (
-                          <span className="message-timestamp">
+                          <span className={`message-timestamp message-timestamp--${m.role}`}>
                             {formatRelativeTime(m.id)}
                           </span>
                         )}

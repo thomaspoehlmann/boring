@@ -221,9 +221,6 @@ body {
 .message-timestamp {
   position: absolute;
   bottom: -22px;
-  left: 0;
-  right: 0;
-  text-align: center;
   font-size: 10px;
   color: var(--muted);
   opacity: 0;
@@ -231,6 +228,14 @@ body {
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
+}
+.message-timestamp--user {
+  right: 0;
+  text-align: right;
+}
+.message-timestamp--assistant {
+  left: 0;
+  text-align: left;
 }
 .group:hover .message-timestamp {
   opacity: 1;
