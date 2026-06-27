@@ -367,10 +367,10 @@ export default function ChatPage() {
       <div className="nebula-blob nebula-blob-2" aria-hidden />
       <div className="nebula-blob nebula-blob-3" aria-hidden />
 
-      <div className="relative z-10 w-full max-w-[680px] max-h-[calc(100vh-2rem)] flex flex-col">
-        <Card className="p-4 sm:p-6 flex flex-col h-full">
+      <div className="relative z-10 w-full max-w-[680px] h-full max-h-[calc(100vh-2rem)] flex flex-col">
+        <Card className="p-0 flex flex-col min-h-0 flex-1">
           {/* Header */}
-          <CardHeader className="flex-row items-center justify-between pb-4">
+          <CardHeader className="flex-row items-center justify-between shrink-0 px-4 pt-4 sm:px-6 sm:pt-6 pb-4">
             <div className="flex items-center gap-3">
               {/* Event-horizon icon */}
               <div
@@ -417,7 +417,7 @@ export default function ChatPage() {
 
           {/* Violet divider */}
           <div
-            className="mb-4 h-px w-full"
+            className="shrink-0 mb-0 h-px w-full"
             style={{
               background:
                 "linear-gradient(to right, transparent, rgba(167,139,250,0.4) 50%, transparent)",
@@ -425,10 +425,10 @@ export default function ChatPage() {
             aria-hidden
           />
 
-          <CardContent className="space-y-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+          <CardContent className="flex flex-col flex-1 min-h-0 overflow-hidden gap-3 px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-4">
             {error ? (
               <div
-                className="flex items-start gap-2 rounded-xl p-3 text-sm"
+                className="shrink-0 flex items-start gap-2 rounded-xl p-3 text-sm"
                 style={{
                   background: "rgba(127,29,29,0.3)",
                   border: "1px solid rgba(239,68,68,0.2)",
@@ -661,7 +661,7 @@ export default function ChatPage() {
 
             {/* Scroll-to-bottom button */}
             {!isAtBottom && (
-              <div className="flex justify-center">
+              <div className="shrink-0 flex justify-center">
                 <button
                   type="button"
                   onClick={() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" })}
@@ -678,7 +678,7 @@ export default function ChatPage() {
 
             {/* Input separator */}
             <div
-              className="h-px w-full"
+              className="shrink-0 h-px w-full"
               style={{
                 background: "linear-gradient(to right, transparent, rgba(167,139,250,0.15) 50%, transparent)",
               }}
@@ -687,7 +687,7 @@ export default function ChatPage() {
 
             {/* Input area */}
             <form
-              className="flex items-end gap-2"
+              className="shrink-0 flex items-end gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (canSend) void sendMessage();
@@ -704,7 +704,7 @@ export default function ChatPage() {
                   onCompositionEnd={handleCompositionEnd}
                   placeholder={placeholder}
                   rows={1}
-                  className="w-full min-h-[44px] resize-none overflow-y-hidden rounded-xl px-3 py-2.5 text-sm transition-all focus:outline-none disabled:opacity-40"
+                  className="w-full min-h-[44px] max-h-[160px] resize-none overflow-y-hidden rounded-xl px-3 py-2.5 text-sm transition-all focus:outline-none disabled:opacity-40"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.08)",
