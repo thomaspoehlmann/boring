@@ -97,19 +97,24 @@ export default function ChatPage() {
     return isSending ? "Waiting for the void..." : "Send a message into the void...";
   }, [isSending]);
 
-  function adjustTextareaHeight() {
+  // Height adjustment is a pure DOM side-effect — kept entirely outside React's
+  // render cycle to avoid forced reflows on every keystroke.
+  useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = "auto";
     const max = 160;
-    const next = Math.min(el.scrollHeight, max);
-    el.style.height = next + "px";
-    el.style.overflowY = next >= max ? "auto" : "hidden";
-  }
+    const onInput = () => {
+      el.style.height = "0";
+      const next = Math.min(el.scrollHeight, max);
+      el.style.height = next + "px";
+      el.style.overflowY = next >= max ? "auto" : "hidden";
+    };
+    el.addEventListener("input", onInput);
+    return () => el.removeEventListener("input", onInput);
+  }, []);
 
   function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setInput(e.target.value);
-    requestAnimationFrame(adjustTextareaHeight);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -171,8 +176,11 @@ export default function ChatPage() {
     persist(base);
     setInput(msg.content);
     requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-      adjustTextareaHeight();
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      // Trigger the native input listener to resize
+      el.dispatchEvent(new Event("input"));
     });
   }
 
@@ -204,7 +212,12 @@ export default function ChatPage() {
     if (!overrideText) {
       setInput("");
       requestAnimationFrame(() => {
-        if (textareaRef.current) textareaRef.current.style.height = "auto";
+        const el = textareaRef.current;
+        if (el) {
+          el.style.height = "0";
+          el.style.overflowY = "hidden";
+          el.style.height = el.scrollHeight + "px";
+        }
       });
     }
 
