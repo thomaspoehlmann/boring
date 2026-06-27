@@ -208,3 +208,18 @@ body {
   background: rgba(167, 139, 250, 0.15);
   box-shadow: 0 0 12px rgba(167, 139, 250, 0.2);
 }
+
+/* ── Message timestamps ── */
+.message-timestamp {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  user-select: none;
+}
+.group:hover .message-timestamp {
+  opacity: 1;
+}
