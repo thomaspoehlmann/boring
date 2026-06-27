@@ -188,3 +188,23 @@ body {
 .action-sensitive:hover {
   opacity: 1;
 }
+
+/* ── Scroll-to-bottom button ── */
+.scroll-to-bottom-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--accent);
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.scroll-to-bottom-btn:hover {
+  background: rgba(167, 139, 250, 0.15);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.2);
+}

@@ -41,6 +41,7 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isComposing, setIsComposing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
 
   const canSend = input.trim().length > 0 && !isSending;
 
@@ -57,6 +58,17 @@ export default function ChatPage() {
   const placeholder = useMemo(() => {
     return isSending ? "Waiting for the void..." : "Send a message into the void...";
   }, [isSending]);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const threshold = 60;
+      setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < threshold);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Height adjustment is a pure DOM side-effect — kept entirely outside React's
   // render cycle to avoid forced reflows on every keystroke.
@@ -600,6 +612,23 @@ export default function ChatPage() {
                 );
               })}
             </div>
+
+            {/* Scroll-to-bottom button */}
+            {!isAtBottom && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" })}
+                  className="scroll-to-bottom-btn"
+                  aria-label="Scroll to bottom"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                    <path d="M7 2v10M3 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Latest
+                </button>
+              </div>
+            )}
 
             {/* Input area */}
             <form
