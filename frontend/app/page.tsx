@@ -462,95 +462,102 @@ export default function ChatPage() {
                 scrollbarColor: "rgba(167,139,250,0.2) transparent",
               }}
             >
-              {messages.map((m, idx) => {
-                const isStreaming = m.status === "streaming";
-                const isLastAssistant =
-                  m.role === "assistant" &&
-                  idx === messages.length - 1 &&
-                  (m.status === "done" || m.status === "streaming");
-                const showActions = m.role === "assistant" || m.role === "user";
-
-                return (
+              {messages.length === 1 && messages[0].id === "welcome" ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-4 text-center select-none">
+                  {/* Large event-horizon icon */}
                   <div
-                    key={m.id}
-                    className={cn(
-                      "flex w-full message-enter",
-                      m.role === "user" ? "justify-end" : "justify-start",
-                    )}
+                    className="size-16 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "radial-gradient(circle at 40% 40%, rgba(167,139,250,0.25), rgba(124,58,237,0.08) 60%, transparent 100%)",
+                      border: "1px solid rgba(167,139,250,0.25)",
+                      boxShadow: "0 0 40px rgba(167,139,250,0.15), inset 0 0 16px rgba(0,0,0,0.6)",
+                    }}
                   >
                     <div
+                      className="size-6 rounded-full"
+                      style={{
+                        background: "radial-gradient(circle, #a78bfa 0%, #4c1d95 60%, #0a0008 100%)",
+                        boxShadow: "0 0 16px rgba(167,139,250,0.7)",
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs tracking-widest uppercase" style={{ color: "var(--muted)" }}>
+                    Ask the darkness.
+                  </p>
+                  <p className="text-sm max-w-xs" style={{ color: "rgba(226,232,240,0.5)" }}>
+                    {messages[0].content}
+                  </p>
+                </div>
+              ) : (
+                messages.map((m, idx) => {
+                  const isStreaming = m.status === "streaming";
+                  const isLastAssistant =
+                    m.role === "assistant" &&
+                    idx === messages.length - 1 &&
+                    (m.status === "done" || m.status === "streaming");
+                  const showActions = m.role === "assistant" || m.role === "user";
+
+                  return (
+                    <div
+                      key={m.id}
                       className={cn(
-                        "group relative max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 assistant-bubble",
+                        "flex w-full message-enter",
+                        m.role === "user" ? "justify-end" : "justify-start",
                       )}
-                      style={
-                        m.role === "user"
-                          ? {
-                              background: "rgba(167,139,250,0.12)",
-                              border: "1px solid rgba(167,139,250,0.25)",
-                              color: "var(--foreground)",
-                            }
-                          : {
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.06)",
-                              color: "var(--foreground)",
-                            }
-                      }
                     >
-                      {m.content ? (
-                        <p className="whitespace-pre-wrap break-words">
-                          {m.content}
-                          {isStreaming && (
-                            <span className="streaming-cursor" aria-hidden />
-                          )}
-                        </p>
-                      ) : isStreaming ? (
-                        <span
-                          className="inline-flex items-center gap-1.5"
-                          style={{ color: "var(--accent)" }}
-                        >
-                          <span className="thinking-dot" />
-                          <span className="thinking-dot" />
-                          <span className="thinking-dot" />
-                        </span>
-                      ) : null}
-
-                      {showActions && m.status !== "streaming" && (
-                        <div
-                          className={cn(
-                            "message-actions absolute -top-9 z-20 flex gap-1 rounded-lg p-0.5",
-                            m.role === "user" ? "right-0" : "left-0",
-                          )}
-                          style={{
-                            background: "rgba(10,10,20,0.85)",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            backdropFilter: "blur(12px)",
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(m.content)}
-                            className="rounded p-1 action-core transition-colors"
-                            style={{ color: "rgba(226,232,240,0.7)" }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.color = "var(--accent)")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.color =
-                                "rgba(226,232,240,0.7)")
-                            }
-                            aria-label="Copy message"
-                            title="Copy"
+                      <div
+                        className={cn(
+                          "group relative max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 assistant-bubble",
+                        )}
+                        style={
+                          m.role === "user"
+                            ? {
+                                background: "rgba(167,139,250,0.12)",
+                                border: "1px solid rgba(167,139,250,0.25)",
+                                color: "var(--foreground)",
+                              }
+                            : {
+                                background: "rgba(255,255,255,0.04)",
+                                border: "1px solid rgba(255,255,255,0.06)",
+                                color: "var(--foreground)",
+                              }
+                        }
+                      >
+                        {m.content ? (
+                          <p className="whitespace-pre-wrap break-words">
+                            {m.content}
+                            {isStreaming && (
+                              <span className="streaming-cursor" aria-hidden />
+                            )}
+                          </p>
+                        ) : isStreaming ? (
+                          <span
+                            className="inline-flex items-center gap-1.5"
+                            style={{ color: "var(--accent)" }}
                           >
-                            <Copy className="size-3.5" />
-                          </button>
+                            <span className="thinking-dot" />
+                            <span className="thinking-dot" />
+                            <span className="thinking-dot" />
+                          </span>
+                        ) : null}
 
-                          {m.role === "assistant" && isLastAssistant && (
+                        {showActions && m.status !== "streaming" && (
+                          <div
+                            className={cn(
+                              "message-actions absolute -top-9 z-20 flex gap-1 rounded-lg p-0.5",
+                              m.role === "user" ? "right-0" : "left-0",
+                            )}
+                            style={{
+                              background: "rgba(10,10,20,0.85)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              backdropFilter: "blur(12px)",
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
                               type="button"
-                              onClick={regenerateLast}
-                              disabled={isSending}
-                              className="rounded p-1 action-core transition-colors disabled:opacity-30"
+                              onClick={() => copyToClipboard(m.content)}
+                              className="rounded p-1 action-core transition-colors"
                               style={{ color: "rgba(226,232,240,0.7)" }}
                               onMouseEnter={(e) =>
                                 (e.currentTarget.style.color = "var(--accent)")
@@ -559,58 +566,79 @@ export default function ChatPage() {
                                 (e.currentTarget.style.color =
                                   "rgba(226,232,240,0.7)")
                               }
-                              aria-label="Regenerate response"
-                              title="Regenerate"
+                              aria-label="Copy message"
+                              title="Copy"
                             >
-                              <RotateCcw className="size-3.5" />
+                              <Copy className="size-3.5" />
                             </button>
-                          )}
 
-                          {m.role === "user" && (
+                            {m.role === "assistant" && isLastAssistant && (
+                              <button
+                                type="button"
+                                onClick={regenerateLast}
+                                disabled={isSending}
+                                className="rounded p-1 action-core transition-colors disabled:opacity-30"
+                                style={{ color: "rgba(226,232,240,0.7)" }}
+                                onMouseEnter={(e) =>
+                                  (e.currentTarget.style.color = "var(--accent)")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.currentTarget.style.color =
+                                    "rgba(226,232,240,0.7)")
+                                }
+                                aria-label="Regenerate response"
+                                title="Regenerate"
+                              >
+                                <RotateCcw className="size-3.5" />
+                              </button>
+                            )}
+
+                            {m.role === "user" && (
+                              <button
+                                type="button"
+                                onClick={() => editAndResend(m.id)}
+                                disabled={isSending}
+                                className="rounded p-1 action-sensitive transition-colors disabled:opacity-30"
+                                style={{ color: "rgba(226,232,240,0.6)" }}
+                                onMouseEnter={(e) =>
+                                  (e.currentTarget.style.color = "var(--accent)")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.currentTarget.style.color =
+                                    "rgba(226,232,240,0.6)")
+                                }
+                                aria-label="Edit and resend"
+                                title="Edit"
+                              >
+                                <Pencil className="size-3.5" />
+                              </button>
+                            )}
+
                             <button
                               type="button"
-                              onClick={() => editAndResend(m.id)}
+                              onClick={() => deleteMessage(m.id)}
                               disabled={isSending}
                               className="rounded p-1 action-sensitive transition-colors disabled:opacity-30"
                               style={{ color: "rgba(226,232,240,0.6)" }}
                               onMouseEnter={(e) =>
-                                (e.currentTarget.style.color = "var(--accent)")
+                                (e.currentTarget.style.color = "#f87171")
                               }
                               onMouseLeave={(e) =>
                                 (e.currentTarget.style.color =
                                   "rgba(226,232,240,0.6)")
                               }
-                              aria-label="Edit and resend"
-                              title="Edit"
+                              aria-label="Delete message"
+                              title="Delete"
                             >
-                              <Pencil className="size-3.5" />
+                              <Trash2 className="size-3.5" />
                             </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => deleteMessage(m.id)}
-                            disabled={isSending}
-                            className="rounded p-1 action-sensitive transition-colors disabled:opacity-30"
-                            style={{ color: "rgba(226,232,240,0.6)" }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.color = "#f87171")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.color =
-                                "rgba(226,232,240,0.6)")
-                            }
-                            aria-label="Delete message"
-                            title="Delete"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
 
             {/* Scroll-to-bottom button */}
