@@ -2,14 +2,20 @@ import { cn } from "@/lib/utils";
 
 type CardProps = React.ComponentProps<"div">;
 
-/** Glass-style surface used across the dashboard. */
+/** Dark glass surface for The Void. */
 export function Card({ className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-white/20 bg-white/80 p-4 shadow-sm backdrop-blur-md",
+        "rounded-[20px] border p-4 shadow-sm backdrop-blur-2xl",
         className,
       )}
+      style={{
+        background: "var(--glass)",
+        borderColor: "var(--glass-border)",
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 60px rgba(167,139,250,0.05)",
+      }}
       {...props}
     />
   );
@@ -25,7 +31,7 @@ export function CardTitle({
 }: React.ComponentProps<"h3">) {
   return (
     <h3
-      className={cn("text-lg font-semibold text-heading", className)}
+      className={cn("text-lg font-light tracking-widest uppercase text-foreground", className)}
       {...props}
     />
   );
@@ -39,5 +45,5 @@ export function CardDescription({
 }
 
 export function CardContent({ className, ...props }: CardProps) {
-  return <div className={cn("text-heading", className)} {...props} />;
+  return <div className={cn("text-foreground", className)} {...props} />;
 }

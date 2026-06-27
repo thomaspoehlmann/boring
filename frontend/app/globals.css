@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #334155;
+  --background: #050508;
+  --foreground: #e2e8f0;
   --primary: #1e293b;
-  --accent: #10b981;
-  --muted: #64748b;
-  --heading: #334155;
-  --border: rgba(255, 255, 255, 0.2);
+  --accent: #a78bfa;
+  --accent-glow: rgba(167, 139, 250, 0.3);
+  --muted: rgba(226, 232, 240, 0.4);
+  --heading: #e2e8f0;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -17,70 +19,124 @@
   --color-accent: var(--accent);
   --color-muted: var(--muted);
   --color-heading: var(--heading);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
-/* Glassmorphism helpers used across dashboard */
-.glass {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
+/* ── Nebula background blobs ── */
+.nebula-blob {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(120px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Streaming & thinking UX */
-@keyframes thinking-bounce {
-  0%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-3px); }
+.nebula-blob-1 {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, #1a0533, transparent 70%);
+  top: -200px;
+  left: -200px;
+  animation: nebulaDrift1 22s ease-in-out infinite alternate;
 }
+
+.nebula-blob-2 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #0d1a3e, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  animation: nebulaDrift2 26s ease-in-out infinite alternate;
+}
+
+.nebula-blob-3 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #2d0a4e, transparent 70%);
+  top: 40%;
+  right: 10%;
+  animation: nebulaDrift3 18s ease-in-out infinite alternate;
+}
+
+@keyframes nebulaDrift1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, 60px) scale(1.05); }
+}
+
+@keyframes nebulaDrift2 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-50px, -40px) scale(1.08); }
+}
+
+@keyframes nebulaDrift3 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(30px, -50px) scale(0.95); }
+}
+
+/* ── Streaming & thinking UX ── */
+@keyframes thinking-float {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50%       { transform: translateY(-4px); opacity: 1; }
+}
+
 .thinking-dot {
   display: inline-block;
-  width: 4px;
-  height: 4px;
-  background: currentColor;
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
   border-radius: 9999px;
-  animation: thinking-bounce 1.2s infinite ease-in-out;
+  animation: thinking-float 1.4s ease-in-out infinite;
 }
-.thinking-dot:nth-child(2) { animation-delay: 0.15s; }
-.thinking-dot:nth-child(3) { animation-delay: 0.3s; }
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
 
 .streaming-cursor {
   display: inline-block;
-  width: 1px;
+  width: 2px;
   height: 1.1em;
-  background: currentColor;
-  margin-left: 1px;
+  background: var(--accent);
+  margin-left: 2px;
   vertical-align: text-bottom;
   animation: blink 0.8s step-end infinite;
+  border-radius: 1px;
 }
+
 @keyframes blink {
   50% { opacity: 0; }
 }
 
 .message-enter {
-  animation: messagePop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: messagePop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
 @keyframes messagePop {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .assistant-bubble {
   position: relative;
 }
 
-/* Best-in-class hover + focus + touch reveal for message actions */
+/* ── Message action bar (dark glass) ── */
 .message-actions {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease, transform 0.12s ease;
-  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: translateY(-3px);
 }
 
 .group:hover .message-actions,
@@ -91,12 +147,10 @@ body {
   transform: translateY(0);
 }
 
-/* Slightly stronger affordance on mobile tap reveal */
 .message-actions--visible {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-/* Make the action buttons comfortable on touch + excellent keyboard focus */
 .message-actions button {
   min-width: 28px;
   min-height: 28px;
@@ -109,22 +163,18 @@ body {
 .message-actions button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
-  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
 }
 
-/* Keep Copy/Regenerate a touch more discoverable than Edit/Delete */
 .action-core {
-  opacity: 0.9;
+  opacity: 0.8;
 }
 .action-core:hover {
   opacity: 1;
 }
 
 .action-sensitive {
-  opacity: 0.75;
+  opacity: 0.6;
 }
 .action-sensitive:hover {
   opacity: 1;
-  background-color: #fee2e2; /* soft red tint on delete hover */
-  color: #b91c1c;
 }
