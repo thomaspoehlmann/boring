@@ -434,7 +434,7 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={clearConversation}
-              className="rounded-lg p-2 transition-colors"
+              className="rounded-lg p-2 transition-colors cursor-pointer"
               style={{ color: "var(--muted)" }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.color = "var(--foreground)")
@@ -680,7 +680,7 @@ export default function ChatPage() {
                 if (canSend) void sendMessage();
               }}
             >
-              <label className="flex-1 text-sm font-medium">
+              <label className="contents">
                 <span className="sr-only">Message</span>
                 <textarea
                   ref={textareaRef}
