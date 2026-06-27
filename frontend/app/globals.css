@@ -232,3 +232,11 @@ body {
 .group:hover .message-timestamp {
   opacity: 1;
 }
+
+/* ── Send button icon slide ── */
+.send-btn svg {
+  transition: transform 0.2s ease;
+}
+.send-btn:not(:disabled):hover svg {
+  transform: translateX(3px);
+}

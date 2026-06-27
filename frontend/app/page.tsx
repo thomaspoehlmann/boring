@@ -743,7 +743,7 @@ export default function ChatPage() {
                   type="submit"
                   variant="primary"
                   disabled={!canSend}
-                  className="h-11 px-4"
+                  className="h-11 px-4 send-btn"
                   aria-label="Send message"
                   style={!canSend ? {
                     background: "rgba(255,255,255,0.06)",
