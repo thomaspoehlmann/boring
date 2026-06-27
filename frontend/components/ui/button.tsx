@@ -20,7 +20,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 const variantInlineStyles: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
     background: "linear-gradient(135deg, #a78bfa, #7c3aed)",
-    boxShadow: "0 0 0 0 var(--accent-glow)",
+    boxShadow: "none",
   },
   secondary: {
     background: "var(--glass)",
