@@ -41,29 +41,6 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isComposing, setIsComposing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-  const [showActionsId, setShowActionsId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!showActionsId) return;
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setShowActionsId(null);
-    };
-
-    const onDocClick = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (listRef.current && !listRef.current.contains(target)) {
-        setShowActionsId(null);
-      }
-    };
-
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDocClick);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onDocClick);
-    };
-  }, [showActionsId]);
 
   const canSend = input.trim().length > 0 && !isSending;
 
@@ -131,7 +108,6 @@ export default function ChatPage() {
   }
 
   function deleteMessage(id: string) {
-    setShowActionsId(null);
     setMessages((prev) => {
       const idx = prev.findIndex((m) => m.id === id);
       if (idx === -1) return prev;
@@ -150,7 +126,6 @@ export default function ChatPage() {
   }
 
   function editAndResend(id: string) {
-    setShowActionsId(null);
     const msg = messages.find((m) => m.id === id);
     if (!msg || msg.role !== "user") return;
     const idx = messages.findIndex((m) => m.id === id);
@@ -185,7 +160,6 @@ export default function ChatPage() {
     const text = (overrideText ?? input).trim();
     if (!text || isSending) return;
 
-    setShowActionsId(null);
     setError(null);
     setIsSending(true);
 
@@ -488,18 +462,13 @@ export default function ChatPage() {
                   <div
                     key={m.id}
                     className={cn(
-                      "group flex w-full message-enter",
+                      "flex w-full message-enter",
                       m.role === "user" ? "justify-end" : "justify-start",
                     )}
-                    onClick={() => {
-                      setShowActionsId((prev) =>
-                        prev === m.id ? null : m.id,
-                      );
-                    }}
                   >
                     <div
                       className={cn(
-                        "relative max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 assistant-bubble",
+                        "group relative max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 assistant-bubble",
                       )}
                       style={
                         m.role === "user"
@@ -514,13 +483,6 @@ export default function ChatPage() {
                               color: "var(--foreground)",
                             }
                       }
-                      onClick={(e) => {
-                        if (
-                          (e.target as HTMLElement).closest(".message-actions")
-                        ) {
-                          e.stopPropagation();
-                        }
-                      }}
                     >
                       {m.content ? (
                         <p className="whitespace-pre-wrap break-words">
@@ -545,8 +507,6 @@ export default function ChatPage() {
                           className={cn(
                             "message-actions absolute -top-2 z-20 flex gap-1 rounded-lg p-0.5",
                             m.role === "user" ? "left-2" : "right-2",
-                            showActionsId === m.id &&
-                              "message-actions--visible",
                           )}
                           style={{
                             background: "rgba(10,10,20,0.85)",
