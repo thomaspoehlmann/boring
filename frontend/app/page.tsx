@@ -102,7 +102,9 @@ export default function ChatPage() {
     if (!el) return;
     el.style.height = "auto";
     const max = 160;
-    el.style.height = Math.min(el.scrollHeight, max) + "px";
+    const next = Math.min(el.scrollHeight, max);
+    el.style.height = next + "px";
+    el.style.overflowY = next >= max ? "auto" : "hidden";
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -691,7 +693,7 @@ export default function ChatPage() {
                   onCompositionEnd={handleCompositionEnd}
                   placeholder={placeholder}
                   rows={1}
-                  className="w-full min-h-[44px] resize-none overflow-y-auto rounded-xl px-3 py-2.5 text-sm transition-all focus:outline-none disabled:opacity-40"
+                  className="w-full min-h-[44px] resize-none overflow-y-hidden rounded-xl px-3 py-2.5 text-sm transition-all focus:outline-none disabled:opacity-40"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.08)",
