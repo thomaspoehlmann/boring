@@ -10,6 +10,7 @@
   --heading: #e2e8f0;
   --glass: rgba(255, 255, 255, 0.04);
   --glass-border: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -39,6 +40,7 @@ body {
   position: fixed;
   border-radius: 9999px;
   filter: blur(120px);
+  will-change: transform;
   opacity: 0.55;
   pointer-events: none;
   z-index: 0;
@@ -253,4 +255,31 @@ body {
 }
 .send-btn:not(:disabled):hover svg {
   transform: translateX(3px);
+}
+
+/* ── Touch devices: always show message actions ── */
+@media (hover: none) {
+  .message-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .nebula-blob {
+    animation: none;
+  }
+  .thinking-dot {
+    animation: none;
+    opacity: 1;
+  }
+  .streaming-cursor {
+    animation: none;
+    opacity: 1;
+  }
+  .message-enter {
+    animation: none;
+  }
 }

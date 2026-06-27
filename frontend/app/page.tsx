@@ -1,40 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   SendHorizonal,
   TriangleAlert,
-  Copy,
-  RotateCcw,
   Trash2,
-  Pencil,
   StopCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { MessageRow } from "@/components/MessageRow";
+import type { Message } from "@/types/message";
 import type { ChatRequest, ChatResponse, ChatMessage } from "@/types/chat";
-
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  status?: "sending" | "streaming" | "done" | "error";
-};
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function formatRelativeTime(id: string): string {
-  if (id === "welcome") return "";
-  const ts = parseInt(id.split("-")[0], 10);
-  if (isNaN(ts)) return "";
-  const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 const WELCOME_MESSAGE: Message = {
@@ -45,6 +25,7 @@ const WELCOME_MESSAGE: Message = {
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
+  const messagesRef = useRef<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,36 +34,30 @@ export default function ChatPage() {
   const [isComposing, setIsComposing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const isAtBottomRef = useRef(true);
+
+  // Keep messagesRef in sync so callbacks never close over stale state
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const canSend = input.trim().length > 0 && !isSending;
+  const placeholder = isSending ? "Waiting for the void..." : "Send a message into the void...";
 
-  function getHistoryForRequest(): ChatMessage[] {
-    return messages
-      .filter((m) => m.role === "user" || m.role === "assistant")
-      .slice(-12)
-      .map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      }));
-  }
-
-  const placeholder = useMemo(() => {
-    return isSending ? "Waiting for the void..." : "Send a message into the void...";
-  }, [isSending]);
-
+  // Scroll listener — only fires setIsAtBottom when value actually changes
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
     const onScroll = () => {
-      const threshold = 60;
-      setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < threshold);
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+      if (atBottom !== isAtBottomRef.current) {
+        isAtBottomRef.current = atBottom;
+        setIsAtBottom(atBottom);
+      }
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Height adjustment is a pure DOM side-effect — kept entirely outside React's
-  // render cycle to avoid forced reflows on every keystroke.
+  // Height adjustment — pure DOM side-effect, outside React render cycle
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -109,12 +84,8 @@ export default function ChatPage() {
     }
   }
 
-  function handleCompositionStart() {
-    setIsComposing(true);
-  }
-  function handleCompositionEnd() {
-    setIsComposing(false);
-  }
+  function handleCompositionStart() { setIsComposing(true); }
+  function handleCompositionEnd() { setIsComposing(false); }
 
   function cancelCurrent() {
     if (abortRef.current) {
@@ -124,13 +95,12 @@ export default function ChatPage() {
     setIsSending(false);
   }
 
-  async function copyToClipboard(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {}
-  }
+  // Stable callbacks passed to MessageRow — won't break React.memo
+  const copyToClipboard = useCallback(async (text: string) => {
+    try { await navigator.clipboard.writeText(text); } catch {}
+  }, []);
 
-  function deleteMessage(id: string) {
+  const deleteMessage = useCallback((id: string) => {
     setMessages((prev) => {
       const idx = prev.findIndex((m) => m.id === id);
       if (idx === -1) return prev;
@@ -146,31 +116,37 @@ export default function ChatPage() {
       }
       return next;
     });
-  }
+  }, []);
 
-  function editAndResend(id: string) {
-    const msg = messages.find((m) => m.id === id);
+  const editAndResend = useCallback((id: string) => {
+    const msgs = messagesRef.current;
+    const msg = msgs.find((m) => m.id === id);
     if (!msg || msg.role !== "user") return;
-    const idx = messages.findIndex((m) => m.id === id);
-    const base = messages.slice(0, idx);
-    setMessages(base);
+    const idx = msgs.findIndex((m) => m.id === id);
+    setMessages(msgs.slice(0, idx));
     setInput(msg.content);
     requestAnimationFrame(() => {
       const el = textareaRef.current;
       if (!el) return;
       el.focus();
-      // Trigger the native input listener to resize
       el.dispatchEvent(new Event("input"));
     });
+  }, []);
+
+  function getHistoryForRequest(): ChatMessage[] {
+    return messagesRef.current
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .slice(-12)
+      .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
   }
 
   function regenerateLast() {
-    const lastUserIdx = [...messages].reverse().findIndex((m) => m.role === "user");
+    const msgs = messagesRef.current;
+    const lastUserIdx = [...msgs].reverse().findIndex((m) => m.role === "user");
     if (lastUserIdx === -1) return;
-    const realIdx = messages.length - 1 - lastUserIdx;
-    const userMsg = messages[realIdx];
-    const base = messages.slice(0, realIdx + 1);
-    setMessages(base);
+    const realIdx = msgs.length - 1 - lastUserIdx;
+    const userMsg = msgs[realIdx];
+    setMessages(msgs.slice(0, realIdx + 1));
     void sendMessage(userMsg.content, true);
   }
 
@@ -210,11 +186,7 @@ export default function ChatPage() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    const userMessage: Message = {
-      id: makeId(),
-      role: "user",
-      content: text,
-    };
+    const userMessage: Message = { id: makeId(), role: "user", content: text };
     const pendingAssistant: Message = {
       id: makeId(),
       role: "assistant",
@@ -236,19 +208,14 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          history: historyForTurn,
-        } satisfies ChatRequest),
+        body: JSON.stringify({ message: text, history: historyForTurn } satisfies ChatRequest),
         signal: controller.signal,
       });
 
       if (!res.ok) {
         const maybeJson = await res.json().catch(() => null);
         const detail =
-          (maybeJson &&
-            typeof maybeJson.error === "string" &&
-            maybeJson.error) ||
+          (maybeJson && typeof maybeJson.error === "string" && maybeJson.error) ||
           `Request failed (${res.status})`;
         throw new Error(detail);
       }
@@ -289,15 +256,16 @@ export default function ChatPage() {
                         : m,
                     ),
                   );
-                  queueMicrotask(() => {
-                    listRef.current?.scrollTo({
-                      top: listRef.current.scrollHeight,
+                  // Only auto-scroll when user hasn't scrolled up to read history
+                  if (isAtBottomRef.current) {
+                    queueMicrotask(() => {
+                      listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
                     });
-                  });
+                  }
                 }
                 if (payload.error) throw new Error(payload.error);
               } catch {
-                // ignore partial
+                // ignore partial JSON
               }
             }
           }
@@ -323,15 +291,11 @@ export default function ChatPage() {
         throw new Error(msg);
       }
       const reply = json && "reply" in json ? json.reply : null;
-      if (!reply || typeof reply !== "string") {
-        throw new Error("Malformed API response");
-      }
+      if (!reply || typeof reply !== "string") throw new Error("Malformed API response");
 
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === pendingAssistant.id
-            ? { ...m, content: reply, status: "done" as const }
-            : m,
+          m.id === pendingAssistant.id ? { ...m, content: reply, status: "done" as const } : m,
         ),
       );
     } catch (err: unknown) {
@@ -359,20 +323,23 @@ export default function ChatPage() {
 
   return (
     <div
-      className="relative flex h-screen items-center justify-center overflow-hidden p-4"
-      style={{ background: "var(--background)" }}
+      className="relative flex h-dvh items-center justify-center overflow-hidden p-2 sm:p-4"
+      style={{
+        background: "var(--background)",
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+      }}
     >
       {/* Nebula background blobs */}
       <div className="nebula-blob nebula-blob-1" aria-hidden />
       <div className="nebula-blob nebula-blob-2" aria-hidden />
       <div className="nebula-blob nebula-blob-3" aria-hidden />
 
-      <div className="relative z-10 w-full max-w-[680px] h-full max-h-[calc(100vh-2rem)] flex flex-col">
+      <div className="relative z-10 w-full max-w-[680px] h-full max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] flex flex-col">
         <Card className="p-0 flex flex-col min-h-0 flex-1">
           {/* Header */}
           <CardHeader className="flex-row items-center justify-between shrink-0 px-4 pt-4 sm:px-6 sm:pt-6 pb-4">
             <div className="flex items-center gap-3">
-              {/* Event-horizon icon */}
               <div
                 className="size-9 rounded-full flex items-center justify-center shrink-0"
                 style={{
@@ -396,18 +363,13 @@ export default function ChatPage() {
               <CardTitle>The Void</CardTitle>
             </div>
 
-            {/* Clear conversation */}
             <button
               type="button"
               onClick={clearConversation}
               className="rounded-lg p-2 transition-colors cursor-pointer"
               style={{ color: "var(--muted)" }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--foreground)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--muted)")
-              }
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--foreground)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}
               aria-label="Clear conversation"
               title="Clear conversation"
             >
@@ -443,13 +405,11 @@ export default function ChatPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const lastUser = [...messages]
+                    const lastUser = [...messagesRef.current]
                       .reverse()
                       .find((m) => m.role === "user");
                     setError(null);
-                    if (lastUser) {
-                      void sendMessage(lastUser.content);
-                    }
+                    if (lastUser) void sendMessage(lastUser.content);
                   }}
                   className="ml-2 shrink-0 rounded-lg px-2 py-1 text-xs font-medium transition-colors"
                   style={{
@@ -471,23 +431,26 @@ export default function ChatPage() {
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "rgba(167,139,250,0.2) transparent",
+                touchAction: "pan-y",
               }}
             >
               {messages.length === 1 && messages[0].id === "welcome" ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-4 text-center select-none">
-                  {/* Large event-horizon icon */}
                   <div
                     className="size-16 rounded-full flex items-center justify-center"
                     style={{
-                      background: "radial-gradient(circle at 40% 40%, rgba(167,139,250,0.25), rgba(124,58,237,0.08) 60%, transparent 100%)",
+                      background:
+                        "radial-gradient(circle at 40% 40%, rgba(167,139,250,0.25), rgba(124,58,237,0.08) 60%, transparent 100%)",
                       border: "1px solid rgba(167,139,250,0.25)",
-                      boxShadow: "0 0 40px rgba(167,139,250,0.15), inset 0 0 16px rgba(0,0,0,0.6)",
+                      boxShadow:
+                        "0 0 40px rgba(167,139,250,0.15), inset 0 0 16px rgba(0,0,0,0.6)",
                     }}
                   >
                     <div
                       className="size-6 rounded-full"
                       style={{
-                        background: "radial-gradient(circle, #a78bfa 0%, #4c1d95 60%, #0a0008 100%)",
+                        background:
+                          "radial-gradient(circle, #a78bfa 0%, #4c1d95 60%, #0a0008 100%)",
                         boxShadow: "0 0 16px rgba(167,139,250,0.7)",
                       }}
                     />
@@ -501,159 +464,21 @@ export default function ChatPage() {
                 </div>
               ) : (
                 messages.map((m, idx) => {
-                  const isStreaming = m.status === "streaming";
                   const isLastAssistant =
                     m.role === "assistant" &&
                     idx === messages.length - 1 &&
                     (m.status === "done" || m.status === "streaming");
-                  const showActions = m.role === "assistant" || m.role === "user";
-
                   return (
-                    <div
+                    <MessageRow
                       key={m.id}
-                      className={cn(
-                        "flex w-full message-enter",
-                        m.role === "user" ? "justify-end" : "justify-start",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "group relative max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 assistant-bubble",
-                        )}
-                        style={
-                          m.role === "user"
-                            ? {
-                                background: "rgba(167,139,250,0.12)",
-                                border: "1px solid rgba(167,139,250,0.25)",
-                                color: "var(--foreground)",
-                              }
-                            : {
-                                background: "rgba(255,255,255,0.04)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                                color: "var(--foreground)",
-                              }
-                        }
-                      >
-                        {m.content ? (
-                          <p className="whitespace-pre-wrap break-words">
-                            {m.content}
-                            {isStreaming && (
-                              <span className="streaming-cursor" aria-hidden />
-                            )}
-                          </p>
-                        ) : isStreaming ? (
-                          <span
-                            className="inline-flex items-center gap-1.5"
-                            style={{ color: "var(--accent)" }}
-                          >
-                            <span className="thinking-dot" />
-                            <span className="thinking-dot" />
-                            <span className="thinking-dot" />
-                          </span>
-                        ) : null}
-
-                        {showActions && m.status !== "streaming" && (
-                          <div
-                            className={cn(
-                              "message-actions absolute -top-9 z-20 flex gap-1 rounded-lg p-0.5",
-                              m.role === "user" ? "right-0" : "left-0",
-                            )}
-                            style={{
-                              background: "rgba(10,10,20,0.85)",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              backdropFilter: "blur(12px)",
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => copyToClipboard(m.content)}
-                              className="rounded p-1 action-core transition-colors"
-                              style={{ color: "rgba(226,232,240,0.7)" }}
-                              onMouseEnter={(e) =>
-                                (e.currentTarget.style.color = "var(--accent)")
-                              }
-                              onMouseLeave={(e) =>
-                                (e.currentTarget.style.color =
-                                  "rgba(226,232,240,0.7)")
-                              }
-                              aria-label="Copy message"
-                              title="Copy"
-                            >
-                              <Copy className="size-3.5" />
-                            </button>
-
-                            {m.role === "assistant" && isLastAssistant && (
-                              <button
-                                type="button"
-                                onClick={regenerateLast}
-                                disabled={isSending}
-                                className="rounded p-1 action-core transition-colors disabled:opacity-30"
-                                style={{ color: "rgba(226,232,240,0.7)" }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.color = "var(--accent)")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.color =
-                                    "rgba(226,232,240,0.7)")
-                                }
-                                aria-label="Regenerate response"
-                                title="Regenerate"
-                              >
-                                <RotateCcw className="size-3.5" />
-                              </button>
-                            )}
-
-                            {m.role === "user" && (
-                              <button
-                                type="button"
-                                onClick={() => editAndResend(m.id)}
-                                disabled={isSending}
-                                className="rounded p-1 action-sensitive transition-colors disabled:opacity-30"
-                                style={{ color: "rgba(226,232,240,0.6)" }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.color = "var(--accent)")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.color =
-                                    "rgba(226,232,240,0.6)")
-                                }
-                                aria-label="Edit and resend"
-                                title="Edit"
-                              >
-                                <Pencil className="size-3.5" />
-                              </button>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() => deleteMessage(m.id)}
-                              disabled={isSending}
-                              className="rounded p-1 action-sensitive transition-colors disabled:opacity-30"
-                              style={{ color: "rgba(226,232,240,0.6)" }}
-                              onMouseEnter={(e) =>
-                                (e.currentTarget.style.color = "#f87171")
-                              }
-                              onMouseLeave={(e) =>
-                                (e.currentTarget.style.color =
-                                  "rgba(226,232,240,0.6)")
-                              }
-                              aria-label="Delete message"
-                              title="Delete"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Timestamp */}
-                        {m.id !== "welcome" && (
-                          <span className={`message-timestamp message-timestamp--${m.role}`}>
-                            {formatRelativeTime(m.id)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                      m={m}
+                      isLastAssistant={isLastAssistant}
+                      isSending={isSending}
+                      onCopy={copyToClipboard}
+                      onRegenerate={regenerateLast}
+                      onEdit={editAndResend}
+                      onDelete={deleteMessage}
+                    />
                   );
                 })
               )}
@@ -664,12 +489,23 @@ export default function ChatPage() {
               <div className="shrink-0 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" })}
+                  onClick={() =>
+                    listRef.current?.scrollTo({
+                      top: listRef.current.scrollHeight,
+                      behavior: "smooth",
+                    })
+                  }
                   className="scroll-to-bottom-btn"
                   aria-label="Scroll to bottom"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-                    <path d="M7 2v10M3 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M7 2v10M3 8l4 4 4-4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                   Latest
                 </button>
@@ -680,7 +516,8 @@ export default function ChatPage() {
             <div
               className="shrink-0 h-px w-full"
               style={{
-                background: "linear-gradient(to right, transparent, rgba(167,139,250,0.15) 50%, transparent)",
+                background:
+                  "linear-gradient(to right, transparent, rgba(167,139,250,0.15) 50%, transparent)",
               }}
               aria-hidden
             />
@@ -704,22 +541,20 @@ export default function ChatPage() {
                   onCompositionEnd={handleCompositionEnd}
                   placeholder={placeholder}
                   rows={1}
-                  className="w-full min-h-[44px] max-h-[160px] resize-none overflow-y-hidden rounded-xl px-3 py-2.5 text-sm transition-all focus:outline-none disabled:opacity-40"
+                  className="w-full min-h-[44px] max-h-[160px] resize-none overflow-y-hidden rounded-xl px-3 py-2.5 transition-all focus:outline-none disabled:opacity-40"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.08)",
                     color: "var(--foreground)",
                     caretColor: "var(--accent)",
+                    fontSize: "16px",
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(167,139,250,0.5)";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 0 3px rgba(167,139,250,0.1)";
+                    e.currentTarget.style.borderColor = "rgba(167,139,250,0.5)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(167,139,250,0.1)";
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                     e.currentTarget.style.boxShadow = "none";
                   }}
                   disabled={isSending}
@@ -747,8 +582,7 @@ export default function ChatPage() {
                   aria-label="Send message"
                   onMouseEnter={(e) => {
                     if (!e.currentTarget.disabled)
-                      e.currentTarget.style.boxShadow =
-                        "0 0 24px var(--accent-glow)";
+                      e.currentTarget.style.boxShadow = "0 0 24px var(--accent-glow)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.boxShadow = "";

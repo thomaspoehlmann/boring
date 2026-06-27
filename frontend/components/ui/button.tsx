@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const baseStyles =
@@ -44,25 +43,6 @@ export function Button({
   return (
     <button
       type={type}
-      className={cn(baseStyles, variantStyles[variant], className)}
-      style={{ ...variantInlineStyles[variant], ...style }}
-      {...props}
-    />
-  );
-}
-
-type ButtonLinkProps = React.ComponentProps<typeof Link> & {
-  variant?: ButtonVariant;
-};
-
-export function ButtonLink({
-  className,
-  variant = "primary",
-  style,
-  ...props
-}: ButtonLinkProps) {
-  return (
-    <Link
       className={cn(baseStyles, variantStyles[variant], className)}
       style={{ ...variantInlineStyles[variant], ...style }}
       {...props}
