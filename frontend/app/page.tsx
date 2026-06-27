@@ -35,9 +35,18 @@ export default function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const isAtBottomRef = useRef(true);
+  const prevIsSendingRef = useRef(false);
 
   // Keep messagesRef in sync so callbacks never close over stale state
   useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  // Focus textarea after response — runs after React commits disabled=false to the DOM
+  useEffect(() => {
+    if (prevIsSendingRef.current && !isSending) {
+      textareaRef.current?.focus();
+    }
+    prevIsSendingRef.current = isSending;
+  }, [isSending]);
 
   const canSend = input.trim().length > 0 && !isSending;
   const placeholder = isSending ? "Waiting for the void..." : "Send a message into the void...";
@@ -316,7 +325,6 @@ export default function ChatPage() {
       abortRef.current = null;
       setTimeout(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-        textareaRef.current?.focus();
       }, 0);
     }
   }
