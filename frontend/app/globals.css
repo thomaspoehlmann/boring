@@ -220,7 +220,7 @@ body {
 /* ── Message timestamps — absolutely positioned so they never add height ── */
 .message-timestamp {
   position: absolute;
-  bottom: -18px;
+  bottom: -22px;
   left: 0;
   right: 0;
   text-align: center;
