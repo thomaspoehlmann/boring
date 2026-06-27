@@ -131,6 +131,15 @@ body {
   position: relative;
 }
 
+.assistant-bubble::before {
+  content: "";
+  position: absolute;
+  top: -36px;
+  left: 0;
+  right: 0;
+  height: 36px;
+}
+
 /* ── Message action bar (dark glass) ── */
 .message-actions {
   opacity: 0;
@@ -158,6 +167,7 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
+  cursor: pointer;
 }
 
 .message-actions button:focus-visible {
